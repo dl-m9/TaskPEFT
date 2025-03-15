@@ -219,7 +219,7 @@ def main(args_input = None):
     if type(args.dataset) ==list and len(args.dataset)==1:
         args.dataset = args.dataset[0]
 
-    args.output = os.path.join(args.output,args.dataset)
+    args.output = os.path.join(args.output,args.dataset) # output directory
     args.run_name = f"{args.dataset}_bz{args.batch_size}_lr{args.lr}_num{args.times_para}" + f"_{args.run_name}"
     args.output = os.path.join(args.output,args.run_name)
 
@@ -253,13 +253,13 @@ def main(args_input = None):
 
     # resolve AMP arguments based on PyTorch / Apex availability
     use_amp = None
-    if args.amp:
+    if args.amp: # 混合精度训练
         # `--amp` chooses native amp before apex (APEX ver not actively maintained)
         if has_native_amp:
             args.native_amp = True
         elif has_apex:
             args.apex_amp = True
-    if args.apex_amp and has_apex:
+    if args.apex_amp and has_apex: # apex amp，NVIDIA混合精度训练
         use_amp = 'apex'
     elif args.native_amp and has_native_amp:
         use_amp = 'native'
@@ -271,6 +271,9 @@ def main(args_input = None):
 
     if args.fuser:
         set_jit_fuser(args.fuser)
+
+
+    ##### 创建模型 #####
 
     model = create_model(
         args.model,
@@ -491,6 +494,9 @@ def main(args_input = None):
         mask = None
 
 
+    # if args.taskedge:
+
+
     try:
         for epoch in range(start_epoch, num_epochs):
             if args.distributed and hasattr(loader_train.sampler, 'set_epoch'):
@@ -594,7 +600,7 @@ def calculate_gradient(model, loader, optimizer, loss_fn, args, amp_autocast=sup
             input = input.contiguous(memory_format=torch.channels_last)
 
         with amp_autocast():
-            if args.contrastive:
+            if args.contrastive: 
                 _, feature = model(input, return_feature=True)
                 f1, f2 = torch.split(feature, [bsz, bsz], dim=0)
                 feature = torch.cat([f1.unsqueeze(1), f2.unsqueeze(1)], dim=1)
@@ -625,6 +631,7 @@ def calculate_gradient(model, loader, optimizer, loss_fn, args, amp_autocast=sup
         end = time.time()
     
     return 
+
 
 
 def train_one_epoch(

@@ -9,8 +9,10 @@ def prune_by_percentile_gradient_perCell(model, time_para=1):
     for name, param in model.named_parameters():
         if "norm" in name or "pos_embed" in name or "cls_token" in name:
             new_mask = np.ones_like(param.data.cpu().numpy())
+            # 如果参数是norm或者pos_embed或者cls_token，则直接跳过，new_mask 为全1, 不参与剪枝
         elif 'head' in name or "bias" in name or "gamma" in name:
             new_mask = np.zeros_like(param.data.cpu().numpy())
+            # 如果参数是head或者bias或者gamma，则直接跳过，new_mask 为全0,全部剪枝
         else:
             if "patch_embed" in name or "conv" in name or "stem.proj.weight" in name or "downsample.proj.weight" in name:
                 tensor = param.grad.data.cpu().numpy()
